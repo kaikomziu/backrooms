@@ -1,25 +1,12 @@
 /* =============================================================
-   レベル定義データ
+   レベル定義データ  ---  出典: Backrooms Wiki (JA) backrooms.fandom.com/ja
    -------------------------------------------------------------
-   このファイルは `level` コマンド (tools/level.py) が自動生成します。
-   手で編集しても構いませんが、その場合は下記フォーマットを厳守:
-     - window.BR_CONFIG  = { ... };   ← 厳密なJSON（ダブルクォート必須）
-     - window.BR_LEVELS  = { ... };   ← 厳密なJSON
-
-   BR_LEVELS[id] = {
-     "danger": 数値,   // 0=安全 / 正=危険(その分SANITY減) / 負=回復(その分回復)
-     "routes": [id,..],// この階で提示される行き先ID（画面には番号だけ表示）
-     "goal":   true,   // 任意。到達で脱出クリア
-     "name":   "..",   // 任意。番号の下に小さく表示
-     "note":   ".."    // 任意。到着時に1行表示
-   }
-
-   コマンド例:
-     level add 2 --danger 25
-     level root 0 to 2 --push
-     level chain 0 1 2 3 10 --push
-     level goal 10 --push
-     level check
+   このファイルは `level` コマンド (tools/level.py) が管理します。
+   danger: 0=安全 / 正=危険(SANITY減) / 負=回復     routes: 行き先ID(番号のみ表示)
+   goal:true=脱出(現実)     開始は BR_CONFIG.startLevel
+   危険度は JA Wiki の「危険度 X/5」を SANITY 減少量に変換:
+     0-1→0(安全) / 2→4 / 3→9 / 4→22 / 5→42(激ヤバ)
+   ルートは各レベルの「出口」「入口」節から採取（一方通行の有向グラフ）
    ============================================================= */
 
 window.BR_CONFIG = {
@@ -29,4 +16,39 @@ window.BR_CONFIG = {
 };
 
 /* ===== LEVELS DATA (level コマンドが管理) ===== */
-window.BR_LEVELS = {};
+window.BR_LEVELS = {
+  "-2": {"danger": 22, "routes": ["0", "13", "14", "2"]},
+  "-1": {"danger": 4, "routes": ["-2", "0", "2"]},
+  "0": {"danger": 0, "routes": ["-1", "1", "2", "46"]},
+  "1": {"danger": 0, "routes": ["0", "2", "24", "46"]},
+  "2": {"danger": 4, "routes": ["0", "126", "3", "4"]},
+  "3": {"danger": 22, "routes": ["126", "4", "5", "6"]},
+  "4": {"danger": 0, "routes": ["3", "5", "6", "71"]},
+  "5": {"danger": 9, "routes": ["3", "4", "6", "78"]},
+  "6": {"danger": 22, "routes": ["3", "5", "7", "8", "9"]},
+  "7": {"danger": 22, "routes": ["178", "37", "4", "8"]},
+  "8": {"danger": 42, "routes": ["10", "7", "9"]},
+  "9": {"danger": 22, "routes": ["10", "11"]},
+  "10": {"danger": 4, "routes": ["11", "958"]},
+  "11": {"danger": 0, "routes": ["0", "1", "118", "12", "13", "138", "142", "178", "2", "3", "33", "3999", "4", "5", "52"]},
+  "12": {"danger": 0, "routes": ["13"]},
+  "13": {"danger": 4, "routes": ["-1", "14", "3"]},
+  "14": {"danger": 9, "routes": ["-2"]},
+  "18": {"danger": 0, "routes": ["142", "52"]},
+  "24": {"danger": 4, "routes": ["1"]},
+  "33": {"danger": 4, "routes": ["11"]},
+  "37": {"danger": 0, "routes": ["4", "7"]},
+  "46": {"danger": 9, "routes": ["4"]},
+  "52": {"danger": 0, "routes": ["11"]},
+  "71": {"danger": 22, "routes": ["4"]},
+  "78": {"danger": 4, "routes": ["11"]},
+  "103": {"danger": 0, "routes": ["0", "5"]},
+  "118": {"danger": 0, "routes": ["11"]},
+  "126": {"danger": 22, "routes": ["5"]},
+  "138": {"danger": 9, "routes": ["103", "178"]},
+  "142": {"danger": 0, "routes": ["11", "18"]},
+  "178": {"danger": 0, "routes": ["11", "138"]},
+  "958": {"danger": 0, "routes": ["10"]},
+  "3999": {"danger": 0, "routes": ["現実"]},
+  "現実": {"danger": 0, "routes": [], "goal": true}
+};

@@ -208,6 +208,7 @@
     // 選択肢
     el.choices.innerHTML = "";
     var routes = (lvl.routes || []).filter(function (r) { return r != null; });
+    el.choices.className = routes.length >= 6 ? "many" : "";
     if (lvl.goal) {
       var g = document.createElement("div");
       g.className = "goal-tag";
@@ -267,7 +268,7 @@
     var title, msg, cls;
     if (reason === "win") {
       title = "脱出成功"; cls = "win";
-      msg = "LEVEL " + run.current + " から外の光の中へ出た。（" + (run.path.length - 1) + " 回の移動）";
+      msg = "現実に帰還した。" + (run.path.length - 1) + " 回の移動でバックルームを抜けた。";
       flash("#0d5a2a"); sfxWin();
     } else if (reason === "stuck") {
       title = "行き止まり"; cls = "lose";
