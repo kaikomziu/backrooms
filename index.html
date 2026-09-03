@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>BACKROOMS ─ レベル移動</title>
+<meta name="description" content="Level 0 から番号だけの選択で潜っていく。安全なレベルを見極め、SANITYを保って脱出せよ。" />
+<link rel="canonical" href="https://kaikomziu.github.io/backrooms/" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="BACKROOMS ─ レベル移動" />
+<meta property="og:description" content="番号だけの選択で潜っていくBackrooms移動ゲーム。安全なレベルを覚えて脱出せよ。" />
+<meta property="og:url" content="https://kaikomziu.github.io/backrooms/" />
+<meta name="robots" content="index,follow" />
+<style>
+  :root{
+    --bg:#c9b64e; --bg2:#b6a338; --wall:#a8962f;
+    --ink:#241f07; --ink2:#4a3f12; --paper:#e9dc8f;
+    --safe:#2e7d32; --warn:#c77a12; --danger:#a11c1c; --heal:#1565c0;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:"Courier New",ui-monospace,Menlo,Consolas,monospace;
+    color:var(--ink);
+    background:
+      repeating-linear-gradient(0deg, rgba(0,0,0,.04) 0 2px, transparent 2px 4px),
+      linear-gradient(160deg, var(--bg), var(--bg2));
+    min-height:100%;
+    display:flex; align-items:flex-start; justify-content:center;
+    padding:16px;
+  }
+  .wrap{width:100%;max-width:820px}
+  header{
+    display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;
+    border-bottom:2px solid var(--ink); padding-bottom:8px; margin-bottom:14px;
+  }
+  header h1{font-size:20px;letter-spacing:3px}
+  header .ver{font-size:11px;opacity:.6}
+  header .sp{flex:1}
+  header button{
+    font-family:inherit;font-size:14px;border:2px solid var(--ink);
+    background:var(--paper);color:var(--ink);padding:2px 8px;cursor:pointer;
+  }
+  header button:active{transform:translateY(1px)}
+
+  #stage{position:relative;overflow:hidden;--shake:0px}
+  @keyframes br-shake{
+    10%,90%{transform:translateX(calc(var(--shake) * -0.4))}
+    30%,70%{transform:translateX(var(--shake))}
+    50%{transform:translateX(calc(var(--shake) * -1))}
+  }
+  #flash{
+    position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:50;
+  }
+
+  .panel{
+    background:rgba(233,220,143,.55);
+    border:2px solid var(--ink);
+    padding:14px;
+    margin-bottom:14px;
+  }
+
+  .level-num{font-size:42px;letter-spacing:6px;font-weight:700;line-height:1}
+  .level-name{font-size:14px;opacity:.7;margin-top:4px;letter-spacing:2px}
+  .note{font-size:13px;margin-top:8px;font-style:italic;opacity:.85}
+
+  .san{margin-top:14px}
+  .san-track{height:16px;border:2px solid var(--ink);background:var(--paper);position:relative}
+  .san-fill{height:100%;background:var(--safe);width:100%;transition:width .35s ease, background .35s}
+  .san-fill.low{background:var(--warn)}
+  .san-fill.crit{background:var(--danger)}
+  .san-text{font-size:12px;margin-top:4px;letter-spacing:1px}
+
+  .path{font-size:12px;opacity:.7;margin-top:10px;word-break:break-all}
+
+  .choose-label{font-size:12px;letter-spacing:2px;opacity:.7;margin-bottom:8px}
+  .goal-tag{
+    background:var(--safe);color:#fff;text-align:center;padding:6px;
+    letter-spacing:2px;font-size:13px;margin-bottom:10px;
+  }
+  #choices{display:flex;gap:12px;flex-wrap:wrap}
+  .choice{
+    flex:1;min-width:130px;
+    font-family:inherit;cursor:pointer;
+    border:3px solid var(--ink);background:var(--paper);color:var(--ink);
+    padding:18px 10px;display:flex;flex-direction:column;align-items:center;gap:6px;
+    transition:transform .08s, background .15s;
+  }
+  .choice:hover{background:#f3e9b0}
+  .choice:active{transform:translateY(2px)}
+  .choice-num{font-size:34px;font-weight:700;letter-spacing:3px}
+  .choice-tag{font-size:12px;letter-spacing:1px;opacity:.75}
+  .choice.known-safe  {border-color:var(--safe)}
+  .choice.known-warn  {border-color:var(--warn)}
+  .choice.known-danger{border-color:var(--danger);background:#f0d9d9}
+  .choice.known-heal  {border-color:var(--heal)}
+
+  .cols{display:flex;gap:14px;flex-wrap:wrap}
+  .cols > *{flex:1;min-width:240px}
+
+  h2.sec{font-size:13px;letter-spacing:2px;border-bottom:1px solid var(--ink2);
+    padding-bottom:4px;margin-bottom:8px;display:flex;justify-content:space-between}
+  h2.sec .cnt{font-weight:400;opacity:.6;font-size:11px}
+
+  #journal{display:flex;flex-direction:column;gap:3px;max-height:260px;overflow:auto}
+  .j-row{display:flex;justify-content:space-between;font-size:13px;
+    padding:3px 6px;background:rgba(255,255,255,.15)}
+  .j-row.j-here{outline:2px solid var(--ink)}
+  .j-row.j-unknown{opacity:.45}
+  .j-id{font-weight:700;letter-spacing:1px}
+  .j-state.k-safe{color:var(--safe)}
+  .j-state.k-warn{color:var(--warn)}
+  .j-state.k-danger{color:var(--danger)}
+  .j-state.k-heal{color:var(--heal)}
+
+  .stats{display:flex;gap:14px;font-size:13px}
+  .stats div{flex:1;text-align:center;background:rgba(255,255,255,.15);padding:8px 4px}
+  .stats b{display:block;font-size:22px;letter-spacing:1px}
+
+  #end .end-title{font-size:30px;letter-spacing:4px;margin-bottom:8px}
+  #end .end-title.win{color:var(--safe)}
+  #end .end-title.lose{color:var(--danger)}
+  #end .end-msg{font-size:14px;margin-bottom:8px}
+  #end .end-path{font-size:12px;opacity:.7;word-break:break-all;margin-bottom:14px}
+  #end button{
+    font-family:inherit;font-size:16px;letter-spacing:2px;cursor:pointer;
+    border:3px solid var(--ink);background:var(--paper);color:var(--ink);padding:10px 22px;
+  }
+  #end button:active{transform:translateY(2px)}
+
+  footer{font-size:11px;opacity:.55;text-align:center;margin-top:6px;line-height:1.6}
+</style>
+</head>
+<body>
+<div id="flash"></div>
+<div class="wrap">
+  <header>
+    <h1>BACKROOMS</h1>
+    <span class="ver" id="verText"></span>
+    <span class="sp"></span>
+    <button id="soundBtn" title="サウンド">🔊</button>
+    <button id="wipeBtn" title="記録を消去">🗑</button>
+  </header>
+
+  <div id="stage">
+    <!-- プレイ画面 -->
+    <div id="play">
+      <div class="panel">
+        <div class="level-num" id="levelNum">LEVEL 0</div>
+        <div class="level-name" id="levelName" hidden></div>
+        <div class="note" id="note" hidden></div>
+        <div class="san">
+          <div class="san-track"><div class="san-fill" id="sanFill"></div></div>
+          <div class="san-text" id="sanText">SANITY 100 / 100</div>
+        </div>
+        <div class="path" id="path"></div>
+      </div>
+
+      <div class="panel">
+        <div class="choose-label">どのレベルへ潜る？</div>
+        <div id="choices"></div>
+      </div>
+
+      <div class="cols">
+        <div class="panel">
+          <h2 class="sec">手帳 <span class="cnt" id="jCount"></span></h2>
+          <div id="journal"></div>
+        </div>
+        <div class="panel">
+          <h2 class="sec">記録</h2>
+          <div class="stats">
+            <div><b id="stRuns">0</b>挑戦</div>
+            <div><b id="stWins">0</b>脱出</div>
+            <div><b id="stDepth">0</b>最深</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 終了画面 -->
+    <div id="end" hidden>
+      <div class="panel">
+        <div class="end-title" id="endTitle"></div>
+        <div class="end-msg" id="endMsg"></div>
+        <div class="end-path" id="endPath"></div>
+        <button id="againBtn">もう一度</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    ルールとレベルは <code>js/levels.js</code> で定義。<br />
+    番号だけを頼りに、安全なレベルを覚えて脱出せよ。
+  </footer>
+</div>
+
+<script src="js/version.js"></script>
+<script src="js/levels.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
