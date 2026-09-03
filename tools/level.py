@@ -138,12 +138,14 @@ def _extract_json(txt, name):
 def write_model(cfg, levels, backup=True):
     if backup and os.path.exists(LEVELS_JS):
         shutil.copyfile(LEVELS_JS, BAK)
-    # レベルは数値優先→文字列でソート
+    # レベルは数値優先→η層→文字列でソート
     def key(k):
+        s = str(k)
+        eta = s.endswith("η")
         try:
-            return (0, float(k))
+            return (1 if eta else 0, float(s[:-1] if eta else s))
         except ValueError:
-            return (1, 0.0)
+            return (2, 0.0)
     ordered = {}
     for k in sorted(levels.keys(), key=lambda k: (key(k), str(k))):
         v = levels[k]
@@ -528,10 +530,12 @@ def cmd_undo(_rest):
 
 def _sorted(levels):
     def key(k):
+        s = str(k)
+        eta = s.endswith("η")
         try:
-            return (0, float(k), "")
+            return (1 if eta else 0, float(s[:-1] if eta else s), "")
         except ValueError:
-            return (1, 0.0, str(k))
+            return (2, 0.0, s)
     return [(k, levels[k]) for k in sorted(levels.keys(), key=key)]
 
 

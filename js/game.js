@@ -237,16 +237,21 @@
 
   function renderJournal() {
     var ids = Object.keys(LEVELS).sort(function (a, b) {
-      var na = parseFloat(a), nb = parseFloat(b);
-      if (!isNaN(na) && !isNaN(nb)) return na - nb;
-      return a < b ? -1 : 1;
+      function k(s) {
+        var eta = /η$/.test(s), n = parseFloat(eta ? s.slice(0, -1) : s);
+        return [isNaN(n) ? 2 : (eta ? 1 : 0), isNaN(n) ? 0 : n, s];
+      }
+      var ka = k(a), kb = k(b);
+      return ka[0] - kb[0] || ka[1] - kb[1] || (ka[2] < kb[2] ? -1 : 1);
     });
     el.journal.innerHTML = "";
     ids.forEach(function (id) {
       var j = journalOf(id);
+      var lv = LEVELS[id] || {};
       var row = document.createElement("div");
       row.className = "j-row" + (j ? "" : " j-unknown") + (run && run.current === id ? " j-here" : "");
-      var n = document.createElement("span"); n.className = "j-id"; n.textContent = id;
+      var n = document.createElement("span"); n.className = "j-id";
+      n.textContent = (j && lv.name) ? (id + " ・ " + lv.name) : id;
       var s = document.createElement("span"); s.className = "j-state";
       s.textContent = j ? (j.visits > 1 ? "訪問 " + j.visits + "回" : "訪問済み") : "未探索";
       row.appendChild(n); row.appendChild(s);
