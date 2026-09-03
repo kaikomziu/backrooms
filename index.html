@@ -89,11 +89,8 @@
   .choice:hover{background:#f3e9b0}
   .choice:active{transform:translateY(2px)}
   .choice-num{font-size:34px;font-weight:700;letter-spacing:3px}
-  .choice-tag{font-size:12px;letter-spacing:1px;opacity:.75}
-  .choice.known-safe  {border-color:var(--safe)}
-  .choice.known-warn  {border-color:var(--warn)}
-  .choice.known-danger{border-color:var(--danger);background:#f0d9d9}
-  .choice.known-heal  {border-color:var(--heal)}
+  .choice-tag{font-size:12px;letter-spacing:1px;opacity:.6}
+  .choice.visited{border-style:double;border-width:4px}
 
   .cols{display:flex;gap:14px;flex-wrap:wrap}
   .cols > *{flex:1;min-width:240px}
@@ -108,10 +105,7 @@
   .j-row.j-here{outline:2px solid var(--ink)}
   .j-row.j-unknown{opacity:.45}
   .j-id{font-weight:700;letter-spacing:1px}
-  .j-state.k-safe{color:var(--safe)}
-  .j-state.k-warn{color:var(--warn)}
-  .j-state.k-danger{color:var(--danger)}
-  .j-state.k-heal{color:var(--heal)}
+  .j-state{opacity:.7}
 
   .stats{display:flex;gap:14px;font-size:13px}
   .stats div{flex:1;text-align:center;background:rgba(255,255,255,.15);padding:8px 4px}
@@ -163,7 +157,7 @@
 
       <div class="cols">
         <div class="panel">
-          <h2 class="sec">手帳 <span class="cnt" id="jCount"></span></h2>
+          <h2 class="sec">到達記録 <span class="cnt" id="jCount"></span></h2>
           <div id="journal"></div>
         </div>
         <div class="panel">

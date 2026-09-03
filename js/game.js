@@ -93,15 +93,6 @@
     s.style.animation = "br-shake .4s ease";
   }
 
-  // ---- レベルの分類 -----------------------------------------
-  function classify(danger) {
-    if (danger < 0) return "heal";
-    if (danger === 0) return "safe";
-    if (danger < 20) return "warn";
-    return "danger";
-  }
-  var CLASS_LABEL = { heal: "回復", safe: "安全", warn: "危険", danger: "高危険", unknown: "未知" };
-
   function journalOf(id) { return store.journal[id] || null; }
 
   // ---- ゲーム進行 ------------------------------------------
@@ -157,7 +148,6 @@
     if (run.path.length - 1 > store.bestDepth) store.bestDepth = run.path.length - 1;
 
     // 演出
-    var kind = classify(danger);
     sfxMove();
     setTimeout(function () {
       if (danger > 0)      { flash("#7a1010"); shake(Math.min(14, 4 + danger / 4)); sfxHurt(); }
@@ -227,20 +217,14 @@
     routes.forEach(function (rid) {
       var j = journalOf(rid);
       var b = document.createElement("button");
-      b.className = "choice";
-      if (j) b.classList.add("known-" + classify(j.danger));
+      b.className = "choice" + (j ? " visited" : "");
       var big = document.createElement("span");
       big.className = "choice-num";
       big.textContent = rid;
       b.appendChild(big);
       var tag = document.createElement("span");
       tag.className = "choice-tag";
-      if (j) {
-        tag.textContent = CLASS_LABEL[classify(j.danger)] +
-          (j.danger > 0 ? " -" + j.danger : j.danger < 0 ? " +" + (-j.danger) : "");
-      } else {
-        tag.textContent = "？";
-      }
+      tag.textContent = j ? "行ったことがある" : "？";
       b.appendChild(tag);
       b.addEventListener("click", function () { choose(rid); });
       el.choices.appendChild(b);
@@ -263,19 +247,12 @@
       row.className = "j-row" + (j ? "" : " j-unknown") + (run && run.current === id ? " j-here" : "");
       var n = document.createElement("span"); n.className = "j-id"; n.textContent = id;
       var s = document.createElement("span"); s.className = "j-state";
-      if (j) {
-        var k = classify(j.danger);
-        s.classList.add("k-" + k);
-        s.textContent = CLASS_LABEL[k] +
-          (j.danger > 0 ? "  -" + j.danger : j.danger < 0 ? "  +" + (-j.danger) : "  ±0");
-      } else {
-        s.textContent = "未探索";
-      }
+      s.textContent = j ? (j.visits > 1 ? "訪問 " + j.visits + "回" : "訪問済み") : "未探索";
       row.appendChild(n); row.appendChild(s);
       el.journal.appendChild(row);
     });
     var known = Object.keys(store.journal).length;
-    el.jCount.textContent = known + " / " + ids.length + " 記録済み";
+    el.jCount.textContent = known + " / " + ids.length + " 到達";
   }
 
   function renderStats() {
