@@ -3,13 +3,14 @@
 """
 level  ---  BACKROOMS レベル/ルート管理コマンド
 
-  level add <id> [--danger N] [--goal] [--name "T"] [--note "..."]
+  level add <id> [危険度] [--goal] [--name "T"] [--note "..."]
+      危険度は素の数値でOK:  level add 5 40   (=SANITY -40) /  level add 4 -15  (=回復)
   level root <from> to <to>[,<to2>,...]        ルート追加 (無い階は自動作成)
   level chain <id> <id> <id> ...               連続ルート a->b->c->... を一括作成
   level fork <from> <to> <to> ...              from から複数への分岐を一括作成
   level remove lev <id>                        レベル削除 (そのレベルへ向かうルートも掃除)
   level remove root <from> to <to>             ルート1本だけ削除
-  level set <id> [--danger N] [--goal|--no-goal] [--name ...] [--note ...]
+  level set <id> [危険度] [--goal|--no-goal] [--name ...] [--note ...]
   level danger <id> <N>                        危険度だけ変更 (set の短縮)
   level goal <id> [--off]                      脱出地点に指定 / 解除
   level start <id>                             開始レベルを変更 (BR_CONFIG.startLevel)
@@ -244,6 +245,16 @@ def split_targets(items):
     return res
 
 
+def pop_bare_int(rest):
+    """id の後ろに置かれた素の数値 (例: `level add 5 40`) を危険度として取り出す"""
+    for i, tok in enumerate(rest):
+        if i == 0:
+            continue  # rest[0] は id
+        if re.match(r'^[+-]?\d+$', str(tok)):
+            return int(tok), rest[:i] + rest[i + 1:]
+    return None, rest
+
+
 # ---------- commands ----------
 def cmd_add(rest):
     danger, rest = pop_opt(rest, "--danger")
@@ -251,8 +262,10 @@ def cmd_add(rest):
     name, rest = pop_opt(rest, "--name")
     note, rest = pop_opt(rest, "--note")
     if not rest:
-        die("使い方: level add <id> [--danger N] [--goal] [--name ..] [--note ..]")
+        die("使い方: level add <id> [危険度] [--goal] [--name ..] [--note ..]")
     lid = norm_id(rest[0])
+    if danger is None:
+        danger, rest = pop_bare_int(rest)
     cfg, levels = read_model()
     lv = ensure_level(levels, lid)
     if danger is not None:
@@ -371,8 +384,10 @@ def cmd_set(rest):
     name, rest = pop_opt(rest, "--name")
     note, rest = pop_opt(rest, "--note")
     if not rest:
-        die("使い方: level set <id> [--danger N] [--goal|--no-goal] [--name ..] [--note ..]")
+        die("使い方: level set <id> [危険度] [--goal|--no-goal] [--name ..] [--note ..]")
     lid = norm_id(rest[0])
+    if danger is None:
+        danger, rest = pop_bare_int(rest)
     cfg, levels = read_model()
     if lid not in levels:
         die("level %s は存在しません (先に level add %s)" % (lid, lid))
